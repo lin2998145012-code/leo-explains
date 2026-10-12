@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Leo 讲开源 · REA</title>
+<script>
+  if (new URLSearchParams(location.search).get("layout") === "landscape") document.documentElement.classList.add("landscape");
+</script>
 <link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-500.css">
 <link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-700.css">
 <link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-900.css">
@@ -230,6 +233,47 @@ body { font-family: var(--sans); color: var(--ink); position: relative; }
 .note { margin-top: 50px; font: 700 36px var(--sans); color: var(--ink-2); display: flex; align-items: center; gap: 14px; }
 .note i { font-style: normal; width: 52px; height: 52px; border-radius: 50%; border: 4px solid var(--ink-2); display: inline-flex; align-items: center; justify-content: center; font: 900 30px var(--sans); }
 .bye { font: 400 120px var(--fun); margin-top: 50px; letter-spacing: 8px; }
+
+/* ================= landscape 1920×1080 (?layout=landscape) =================
+   Leo + speech bubble on the left, the stage on the right. Scenes keep their
+   markup; only sizes and arrangement change. */
+.landscape, .landscape body { width: 1920px; height: 1080px; }
+.landscape #top { top: 36px; }
+.landscape #progress { top: 124px; }
+.landscape #stage { left: 640px; right: 60px; top: 160px; height: 880px; }
+.landscape #leo { left: 80px; top: 440px; width: 384px; height: 600px; }
+.landscape #fx { left: 60px; top: 400px; width: 384px; }
+.landscape #bubble { left: 40px; right: auto; width: 570px; top: 160px; height: 240px; }
+.landscape #sub { font-size: 50px; }
+.landscape #bubble::before { left: 250px; top: auto; bottom: -46px; border-width: 46px 26px 0 26px; border-color: var(--ink) transparent transparent transparent; }
+.landscape #bubble::after { left: 257px; top: auto; bottom: -35px; border-width: 36px 19px 0 19px; border-color: var(--card) transparent transparent transparent; }
+
+.landscape #s-hook { zoom: .85; }
+.landscape #s-hook .phone { left: 467px; }
+.landscape #h-s1 { left: 407px !important; }
+.landscape #h-s2 { left: 997px !important; }
+
+.landscape #s-what { flex-direction: row; align-items: center; }
+.landscape .tier { flex: 1; min-width: 0; padding: 28px 26px; }
+.landscape .tier h3 { font-size: 38px; flex-wrap: wrap; gap: 12px; }
+.landscape .tier .chip { font-size: 32px; padding: 10px 22px; }
+.landscape .pipe { transform: rotate(-90deg); margin: 0 30px; }
+
+.landscape .steps { top: 280px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.landscape .step { margin: 0; padding: 22px 26px; }
+
+.landscape .grid { grid-template-columns: repeat(4, 1fr); margin-top: 44px; }
+.landscape .tile { flex-direction: column; text-align: center; padding: 28px 12px; gap: 16px; }
+.landscape .tile span { font-size: 23px; }
+
+.landscape #s-trust { display: flex; align-items: center; gap: 44px; }
+.landscape .laptop { margin: 0 0 0 30px; width: 600px; flex: none; }
+.landscape .laptop .screen { height: 370px; }
+.landscape .badge b { white-space: nowrap; }
+.landscape .badges { flex: 1; margin-top: 0; }
+.landscape .badge span { display: block; margin: 4px 0 0; }
+
+.landscape .term pre { min-height: 470px; font-size: 36px; }
 </style>
 </head>
 <body>
@@ -522,7 +566,7 @@ function build() {
   // start
   A("#g-title", "down", scene("start").start, 0.5);
   A("#g-term", "up", scene("start").start + 0.1, 0.6);
-  typeOn("#g-cmd", at("start", 0, "npx") - 0.1, at("start", 0, "npx") + 1.5, true);
+  typeOn("#g-cmd", at("start", 0, "终端"), at("start", 0, "命令") + 0.4, true);
   stagger(".g-out", "fade", line("start", 1).start - 0.1, 0.55, 0.25, "linear", "tick");
   A("#g-caret", "outFade", line("start", 1).start - 0.2, 0.1);
   A("#g-chip", "up", line("start", 1).start + 3.0, 0.5);
@@ -550,7 +594,7 @@ function build() {
   for (let i = 0; i < 34; i++) {
     const s = document.createElement("span");
     s.textContent = words[i % words.length];
-    s.dataset.x = rnd() * 1000 - 80; s.dataset.y = rnd() * 2100; s.dataset.v = 8 + rnd() * 16;
+    s.dataset.x = rnd() * (innerWidth - 80) - 80; s.dataset.y = rnd() * 2100; s.dataset.v = 8 + rnd() * 16;
     $("#hex").appendChild(s);
   }
 

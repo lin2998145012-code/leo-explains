@@ -3,8 +3,16 @@
 Reads video/script.json, writes one wav per line to build/vo/ and
 build/timeline.json, which index.html and mix.py both consume.
 
-Usage: python3 tools/tts.py --model <kokoro-multi-lang-v1_1 dir>
-Model: https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Two voices:
+  python3 tools/tts.py --model <kokoro-multi-lang-v1_1 dir>
+      stock Kokoro voice (speaker id from script.json)
+  python3 tools/tts.py --model <zipvoice dir> --vocoder vocos_24khz.onnx \
+      --ref voice/ref.wav --ref-text voice/ref.txt
+      ZipVoice zero-shot clone of the speaker in ref.wav (exact transcript in ref.txt)
+
+With --asr <sense-voice dir>, every generated line is transcribed back and
+regenerated (keeping the best take) when it drifts from the script.
+Models: https://github.com/k2-fsa/sherpa-onnx/releases (tts-models, vocoder-models, asr-models)
 """
 import argparse
 import json
@@ -30,7 +38,7 @@ def width(s):
     return sum(1 if ord(c) > 0x2E80 else 0.55 for c in s)
 
 
-def load_tts(d: Path):
+def load_kokoro(d: Path):
     d = str(d) + "/"
     cfg = sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
@@ -42,6 +50,45 @@ def load_tts(d: Path):
         rule_fsts=d + "date-zh.fst," + d + "phone-zh.fst," + d + "number-zh.fst",
         max_num_sentences=1)
     return sherpa_onnx.OfflineTts(cfg)
+
+
+def load_zipvoice(d: Path, vocoder: Path):
+    d = str(d) + "/"
+    cfg = sherpa_onnx.OfflineTtsConfig(
+        model=sherpa_onnx.OfflineTtsModelConfig(
+            zipvoice=sherpa_onnx.OfflineTtsZipvoiceModelConfig(
+                tokens=d + "tokens.txt", encoder=d + "encoder.int8.onnx", decoder=d + "decoder.int8.onnx",
+                vocoder=str(vocoder), data_dir=d + "espeak-ng-data", lexicon=d + "lexicon.txt"),
+            num_threads=8))
+    return sherpa_onnx.OfflineTts(cfg)
+
+
+def load_asr(d: Path):
+    d = str(d) + "/"
+    return sherpa_onnx.OfflineRecognizer.from_sense_voice(
+        model=d + "model.int8.onnx", tokens=d + "tokens.txt", use_itn=True, language="zh")
+
+
+def norm(s):
+    return re.sub(r"[^0-9a-z\u4e00-\u9fff]", "", s.lower())
+
+
+def cer(ref, hyp):
+    """Character error rate (edit distance / reference length)."""
+    a, b = norm(ref), norm(hyp)
+    d = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        prev, d[0] = d[0], i
+        for j, cb in enumerate(b, 1):
+            prev, d[j] = d[j], min(d[j] + 1, d[j - 1] + 1, prev + (ca != cb))
+    return d[len(b)] / max(1, len(a))
+
+
+def transcribe(asr, x, sr):
+    s = asr.create_stream()
+    s.accept_waveform(sr, x)
+    asr.decode_stream(s)
+    return s.result.text
 
 
 def trim(x, sr, thresh=0.01):
@@ -69,11 +116,32 @@ def chunks(text):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, type=Path)
+    ap.add_argument("--vocoder", type=Path)
+    ap.add_argument("--ref", type=Path, help="reference clip to clone (ZipVoice)")
+    ap.add_argument("--ref-text", type=Path, help="exact transcript of --ref")
+    ap.add_argument("--asr", type=Path, help="SenseVoice dir: check each line and retake if needed")
+    ap.add_argument("--speed", type=float)
     args = ap.parse_args()
 
     script = json.loads((ROOT / "video" / "script.json").read_text())
     voice = script["voice"]
-    tts = load_tts(args.model)
+    speed = args.speed or voice["clone_speed" if args.ref else "speed"]
+    if args.ref:
+        tts = load_zipvoice(args.model, args.vocoder)
+        ref, ref_sr = sf.read(args.ref, dtype="float32")
+        ref_text = args.ref_text.read_text().strip()
+
+        def speak(text, k):
+            # Retakes nudge the pace and sampling steps; flow matching varies per take.
+            return tts.generate(text, prompt_text=ref_text, prompt_samples=ref.tolist(), sample_rate=ref_sr,
+                                speed=speed * (1, 0.96, 1.04, 1.0)[k], num_steps=(8, 8, 8, 12)[k])
+    else:
+        tts = load_kokoro(args.model)
+
+        def speak(text, k):
+            return tts.generate(text, sid=voice["sid"], speed=speed)
+    asr = load_asr(args.asr) if args.asr else None
+    report = []
     (BUILD / "vo").mkdir(parents=True, exist_ok=True)
 
     t = LEAD_IN
@@ -87,9 +155,20 @@ def main():
         for li, line in enumerate(scene["lines"]):
             if li:
                 t += LINE_GAP
-            audio = tts.generate(line.get("tts", line["text"]), sid=voice["sid"], speed=voice["speed"])
-            sr = audio.sample_rate
-            x = trim(np.asarray(audio.samples, dtype=np.float32), sr)
+            best = None
+            for k in range(4 if asr else 1):
+                audio = speak(line.get("tts", line["text"]), k)
+                sr = audio.sample_rate
+                x = trim(np.asarray(audio.samples, dtype=np.float32), sr)
+                heard = transcribe(asr, x, sr) if asr else ""
+                err = cer(line.get("asr", line["text"]), heard) if asr else 0.0
+                if best is None or err < best[0]:
+                    best = (err, x, heard)
+                if err <= 0.03:
+                    break
+            err, x, heard = best
+            if asr:
+                report.append(f"{err:4.0%}  {line['text']}\n      heard: {heard}")
             name = f"{n:02d}_{scene['id']}_{li}.wav"
             sf.write(BUILD / "vo" / name, x, sr)
             dur = len(x) / sr
@@ -115,6 +194,9 @@ def main():
     timeline = {"title": script["title"], "duration": round(end, 3), "scenes": scenes}
     (BUILD / "timeline.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=1))
     print(f"total {end:.2f}s")
+    if report:
+        (BUILD / "asr_report.txt").write_text("\n".join(report) + "\n")
+        print("\n".join(report))
 
 
 if __name__ == "__main__":

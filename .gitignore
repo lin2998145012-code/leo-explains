@@ -1,3 +1,6 @@
 node_modules/
 build/
 __pycache__/
+
+# Voice samples stay local: a clean clip is enough to clone someone's voice.
+voice/

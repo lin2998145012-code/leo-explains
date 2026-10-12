@@ -1,6 +1,7 @@
 // Render video/index.html frame by frame and encode it with the soundtrack.
 //
 //   node tools/render.mjs                    full render → out/<name>.mp4
+//   node tools/render.mjs --layout landscape 16:9 version (1920×1080)
 //   node tools/render.mjs --stills 3,12.5    PNG stills → build/stills/
 //   node tools/render.mjs --cues             only write build/cues.json
 //
@@ -17,7 +18,9 @@ const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i < 0 ? d : args[i + 1]; };
 const FPS = +opt("--fps", 30);
-const OUT = opt("--out", join(ROOT, "out", "leo-explains-rea.mp4"));
+const LAYOUT = opt("--layout", "portrait");
+const [W, H] = LAYOUT === "landscape" ? [1920, 1080] : [1080, 1920];
+const OUT = opt("--out", join(ROOT, "out", `leo-explains-rea-${LAYOUT}.mp4`));
 
 const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
   ".png": "image/png", ".webp": "image/webp", ".woff2": "font/woff2", ".woff": "font/woff", ".svg": "image/svg+xml" };
@@ -36,9 +39,9 @@ function serve() {
 
 const server = await serve();
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
 page.on("pageerror", (e) => { console.error("page error:", e); process.exitCode = 1; });
-await page.goto(`http://127.0.0.1:${server.address().port}/video/index.html`);
+await page.goto(`http://127.0.0.1:${server.address().port}/video/index.html?layout=${LAYOUT}`);
 await page.evaluate(() => window.ready);
 const duration = await page.evaluate(() => window.DURATION);
 writeFileSync(join(ROOT, "build", "cues.json"), JSON.stringify(await page.evaluate(() => window.CUES)));
@@ -51,7 +54,7 @@ async function frame(t, type = "jpeg") {
 if (args.includes("--stills")) {
   mkdirSync(join(ROOT, "build", "stills"), { recursive: true });
   for (const t of opt("--stills").split(",").map(Number)) {
-    writeFileSync(join(ROOT, "build", "stills", `t${t.toFixed(2)}.png`), await frame(t, "png"));
+    writeFileSync(join(ROOT, "build", "stills", `${LAYOUT}-t${t.toFixed(2)}.png`), await frame(t, "png"));
   }
   console.log("stills written");
 } else if (!args.includes("--cues")) {
