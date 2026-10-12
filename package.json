@@ -1,0 +1,17 @@
+{
+  "name": "leo-explains",
+  "private": true,
+  "description": "Leo explains open-source projects: short explainer videos starring Leo.",
+  "type": "module",
+  "scripts": {
+    "render": "node tools/render.mjs"
+  },
+  "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/noto-sans-sc": "^5.3.1",
+    "@fontsource/zcool-kuaile": "^5.3.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}

@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Leo 讲开源 · REA</title>
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-500.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-700.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/chinese-simplified-900.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/latin-500.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/latin-700.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-sc/latin-900.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/zcool-kuaile/index.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/jetbrains-mono/500.css">
+<link rel="stylesheet" href="/node_modules/@fontsource/jetbrains-mono/800.css">
+<style>
+:root {
+  --paper: #f3efe6;
+  --paper-2: #ebe5d8;
+  --ink: #1b1b1d;
+  --ink-2: #4a4a50;
+  --muted: #8a857a;
+  --blue: #2f5d9a;
+  --blue-soft: #dbe5f2;
+  --marker: #ffd43b;
+  --red: #d9480f;
+  --green: #2b8a3e;
+  --card: #fffdf8;
+  --sans: "Noto Sans SC", "WenQuanYi Zen Hei", sans-serif;
+  --fun: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+  --mono: "JetBrains Mono", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--paper); }
+body { font-family: var(--sans); color: var(--ink); position: relative; }
+
+/* ---------- backdrop ---------- */
+#dots {
+  position: absolute; inset: -40px;
+  background-image: radial-gradient(rgba(27,27,29,.13) 2px, transparent 2.5px);
+  background-size: 40px 40px;
+}
+#hex { position: absolute; inset: 0; overflow: hidden; }
+#hex span {
+  position: absolute; font: 500 26px var(--mono); color: var(--ink);
+  opacity: .055; white-space: nowrap;
+}
+
+/* ---------- chrome ---------- */
+#top {
+  position: absolute; left: 56px; right: 56px; top: 64px; height: 76px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--ink); color: #fff; border-radius: 40px; padding: 10px 30px 10px 12px;
+  font: 700 34px var(--sans); letter-spacing: 2px;
+}
+.brand i {
+  width: 52px; height: 52px; border-radius: 50%; background: #fff center 12% / 150% no-repeat;
+  background-image: url(/assets/leo.png);
+}
+.ep { font: 800 30px var(--mono); color: var(--ink-2); letter-spacing: 1px; }
+#progress { position: absolute; left: 56px; right: 56px; top: 156px; height: 8px; border-radius: 4px; background: var(--paper-2); overflow: hidden; }
+#progress b { display: block; height: 100%; width: 0; background: var(--ink); border-radius: 4px; }
+
+/* ---------- stage & scenes ---------- */
+#stage { position: absolute; left: 60px; right: 60px; top: 200px; height: 1040px; }
+.scene { position: absolute; inset: 0; opacity: 0; }
+.e { opacity: 0; }
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.card {
+  background: var(--card); border: 5px solid var(--ink); border-radius: 36px;
+  box-shadow: 10px 12px 0 var(--ink);
+}
+.kicker { font: 900 44px var(--sans); letter-spacing: 3px; }
+.mark { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding: 0 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; border-radius: 999px;
+  border: 4px solid var(--ink); background: var(--card); font: 700 36px var(--sans); white-space: nowrap;
+}
+.chip.dark { background: var(--ink); color: #fff; }
+.mono { font-family: var(--mono); }
+
+/* ---------- Leo & speech ---------- */
+#leo { position: absolute; left: 30px; top: 1190px; width: 440px; height: 688px; transform-origin: 50% 100%; }
+#leo .shadow {
+  position: absolute; left: 70px; right: 70px; bottom: -14px; height: 34px; border-radius: 50%;
+  background: rgba(27,27,29,.18);
+}
+#leo .body { position: absolute; inset: 0; transform-origin: 50% 100%; }
+#leo img { position: absolute; inset: 0; width: 100%; height: 100%; visibility: hidden; }
+#leo img.on { visibility: visible; }
+#fx { position: absolute; left: 30px; top: 1150px; width: 440px; height: 300px; pointer-events: none; }
+#fx span { position: absolute; font: 900 92px var(--fun); color: var(--ink); opacity: 0; }
+
+#bubble {
+  position: absolute; left: 488px; right: 44px; top: 1330px; height: 360px;
+  background: var(--card); border: 5px solid var(--ink); border-radius: 44px;
+  box-shadow: 10px 12px 0 var(--ink);
+  display: flex; align-items: center; justify-content: center; padding: 30px 28px;
+  opacity: 0;
+}
+#bubble::before, #bubble::after { content: ""; position: absolute; top: 120px; border-style: solid; }
+#bubble::before { left: -46px; border-width: 26px 46px 26px 0; border-color: transparent var(--ink) transparent transparent; }
+#bubble::after { left: -35px; top: 127px; border-width: 19px 36px 19px 0; border-color: transparent var(--card) transparent transparent; }
+#sub { font: 900 54px/1.4 var(--sans); text-align: center; letter-spacing: 1px; word-break: break-word; text-wrap: balance; }
+#subwho { position: absolute; top: -26px; left: 40px; background: var(--ink); color: #fff; font: 800 26px var(--mono); padding: 4px 18px; border-radius: 12px; letter-spacing: 2px; }
+
+/* ---------- scene: hook ---------- */
+.phone {
+  position: absolute; left: 230px; top: 40px; width: 500px; height: 900px;
+  border: 6px solid var(--ink); border-radius: 64px; background: var(--card); box-shadow: 12px 14px 0 var(--ink);
+  padding: 70px 34px 34px;
+}
+.phone .notch { position: absolute; left: 50%; top: 22px; width: 140px; height: 26px; margin-left: -70px; border-radius: 14px; background: var(--ink); }
+.phone .row { height: 34px; border-radius: 17px; background: var(--paper-2); margin: 22px 0; }
+.phone .search { height: 76px; border-radius: 38px; border: 4px solid var(--ink); display: flex; align-items: center; padding: 0 26px; font: 700 32px var(--sans); color: var(--muted); gap: 14px; }
+.phone .feature {
+  margin: 30px 0; padding: 26px; border-radius: 28px; background: var(--blue); color: #fff;
+  font: 900 40px var(--sans); display: flex; align-items: center; gap: 16px;
+}
+.phone .feature small { display: block; font: 500 26px var(--sans); opacity: .85; margin-top: 6px; }
+.spark { position: absolute; font: 900 70px var(--fun); color: var(--marker); -webkit-text-stroke: 3px var(--ink); }
+.stamp {
+  position: absolute; left: 50%; top: 360px; width: 760px; margin-left: -380px; text-align: center;
+  font: 900 150px var(--sans); color: var(--red); letter-spacing: 6px;
+  border: 12px solid var(--red); border-radius: 30px; background: rgba(255,253,248,.94); padding: 14px 0 24px;
+}
+.stamp small { display: block; font: 700 46px var(--mono); letter-spacing: 2px; color: var(--ink); margin-top: 4px; }
+
+/* ---------- scene: intro ---------- */
+.logo {
+  width: 230px; height: 230px; border-radius: 52px; background: var(--ink);
+  display: flex; align-items: center; justify-content: center; box-shadow: 12px 14px 0 var(--marker);
+}
+.logo svg { width: 180px; height: 180px; }
+.big { font: 900 230px/1 var(--sans); letter-spacing: 10px; margin-top: 50px; }
+.tagline { font: 800 44px var(--mono); color: var(--ink-2); margin-top: 18px; letter-spacing: 1px; }
+.zh { font: 400 128px var(--fun); margin-top: 34px; letter-spacing: 16px; }
+
+/* ---------- scene: what ---------- */
+#s-what { display: flex; flex-direction: column; justify-content: center; }
+.tier { padding: 30px 36px; }
+.tier h3 { font: 900 44px var(--sans); display: flex; align-items: center; gap: 16px; }
+.tier h3 .n { font: 800 28px var(--mono); background: var(--ink); color: #fff; border-radius: 10px; padding: 2px 12px; }
+.tier .chips { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+.tier.core { background: var(--ink); color: #fff; box-shadow: 10px 12px 0 var(--blue); }
+.tier.core h3 .n { background: #fff; color: var(--ink); }
+.tier.core p { font: 500 34px var(--sans); color: #d8d4cc; margin-top: 12px; }
+.pipe { position: relative; align-self: center; width: 12px; height: 70px; margin: 8px 0; overflow: hidden; }
+.pipe i { position: absolute; left: 0; right: 0; top: -100%; height: 300%;
+  background: repeating-linear-gradient(180deg, var(--ink) 0 22px, transparent 22px 40px); }
+
+/* ---------- scene: how ---------- */
+.ask { position: absolute; left: 0; right: 0; top: 0; padding: 34px 40px; }
+.ask .who { font: 800 28px var(--mono); color: var(--muted); letter-spacing: 2px; }
+.ask .q { font: 700 44px/1.5 var(--sans); margin-top: 10px; min-height: 132px; }
+.caret { display: inline-block; width: 5px; height: 48px; background: var(--ink); vertical-align: -8px; margin-left: 4px; }
+.steps { position: absolute; left: 0; right: 0; top: 300px; }
+.step {
+  display: flex; align-items: center; gap: 26px; padding: 16px 30px; margin-bottom: 18px;
+  border: 5px solid var(--ink); border-radius: 30px; background: var(--card);
+}
+.step .no { flex: none; width: 76px; height: 76px; border-radius: 50%; background: var(--ink); color: #fff; font: 800 40px var(--mono); display: flex; align-items: center; justify-content: center; }
+.step b { font: 900 46px var(--sans); }
+.step span { display: block; font: 500 30px var(--sans); color: var(--ink-2); margin-top: 2px; }
+.step.agent { background: var(--blue-soft); }
+.step .who2 { margin-left: auto; font: 800 26px var(--mono); padding: 6px 16px; border-radius: 12px; background: var(--ink); color: #fff; }
+.step.agent .who2 { background: var(--blue); }
+
+/* ---------- scene: scope ---------- */
+.title { font: 900 72px var(--sans); text-align: center; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 50px; }
+.tile { display: flex; align-items: center; gap: 22px; padding: 26px 28px; border: 5px solid var(--ink); border-radius: 28px; background: var(--card); box-shadow: 7px 8px 0 var(--ink); }
+.tile .ic { flex: none; width: 82px; height: 82px; border-radius: 22px; background: var(--paper-2); font: 800 30px var(--mono); display: flex; align-items: center; justify-content: center; }
+.tile b { font: 900 40px var(--sans); line-height: 1.2; }
+.tile span { display: block; font: 500 26px var(--sans); color: var(--ink-2); }
+.more { text-align: center; margin-top: 40px; font: 700 36px var(--sans); color: var(--ink-2); }
+
+/* ---------- scene: case ---------- */
+.case-head { display: flex; align-items: center; gap: 34px; padding: 30px; }
+.case-head img { width: 250px; height: 250px; object-fit: cover; border-radius: 26px; border: 4px solid var(--ink); background: #f2f2f2; }
+.case-head .lbl { font: 800 30px var(--mono); color: var(--muted); letter-spacing: 2px; }
+.case-head h2 { font: 900 84px var(--sans); line-height: 1.1; margin-top: 6px; }
+.case-head p { font: 500 32px var(--sans); color: var(--ink-2); margin-top: 8px; }
+.trace { display: flex; align-items: center; justify-content: space-between; margin-top: 40px; }
+.trace .node { width: 280px; padding: 22px 10px; text-align: center; border: 5px solid var(--ink); border-radius: 26px; background: var(--card); font: 900 38px var(--sans); }
+.trace .node span { display: block; font: 600 26px var(--mono); color: var(--ink-2); margin-top: 4px; }
+.trace .node.hot { background: var(--marker); }
+.trace .arr { font: 900 60px var(--sans); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 44px; }
+.stat { padding: 30px 26px; border-radius: 30px; background: var(--ink); color: #fff; text-align: center; }
+.stat .v { font: 800 104px/1 var(--mono); letter-spacing: -2px; }
+.stat .v small { font-size: 44px; color: #a9a49a; letter-spacing: 0; }
+.stat .k { font: 700 34px var(--sans); margin-top: 16px; color: #e6e1d6; }
+.stat .ok { display: inline-block; margin-top: 14px; font: 900 32px var(--sans); color: var(--ink); background: var(--marker); padding: 4px 18px; border-radius: 12px; }
+
+/* ---------- scene: trust ---------- */
+.laptop { position: relative; margin: 10px auto 0; width: 860px; }
+.laptop .screen { border: 14px solid var(--ink); border-radius: 30px 30px 0 0; overflow: hidden; height: 470px; background: #000; }
+.laptop .screen img { width: 100%; display: block; }
+.laptop .base { height: 34px; margin: 0 -40px; background: var(--ink); border-radius: 0 0 30px 30px; }
+.badges { display: flex; flex-direction: column; gap: 18px; margin-top: 40px; }
+.badge { display: flex; align-items: center; gap: 24px; padding: 16px 30px; border: 5px solid var(--ink); border-radius: 28px; background: var(--card); }
+.badge .ic { flex: none; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 900 40px var(--sans); color: #fff; background: var(--ink); }
+.badge b { font: 900 44px var(--sans); }
+.badge span { font: 500 30px var(--sans); color: var(--ink-2); margin-left: 6px; }
+.lock { position: absolute; right: 26px; top: 26px; }
+
+/* ---------- scene: start ---------- */
+.term { margin-top: 30px; border: 5px solid var(--ink); border-radius: 30px; overflow: hidden; background: #17171a; box-shadow: 12px 14px 0 var(--blue); }
+.term .bar { height: 64px; background: #2a2a2f; display: flex; align-items: center; gap: 14px; padding: 0 26px; }
+.term .bar i { width: 22px; height: 22px; border-radius: 50%; background: #ff5f57; }
+.term .bar i:nth-child(2) { background: #febc2e; } .term .bar i:nth-child(3) { background: #28c840; }
+.term .bar b { margin-left: 18px; font: 600 26px var(--mono); color: #9a9aa2; }
+.term pre { padding: 34px 36px 40px; font: 500 38px/1.65 var(--mono); color: #e8e6e1; min-height: 560px; white-space: pre-wrap; }
+.term .p { color: #7ee787; } .term .c { color: #fff; font-weight: 800; }
+.term .dim { color: #8b8b93; } .term .ok { color: #7ee787; } .term .hl { color: var(--marker); }
+.cmd { text-align: center; margin-top: 54px; }
+.cmd .chip { font: 800 44px var(--mono); padding: 18px 40px; }
+
+/* ---------- scene: outro ---------- */
+.end-logo { display: flex; align-items: center; gap: 36px; }
+.end-logo .logo { width: 170px; height: 170px; border-radius: 40px; }
+.end-logo .logo svg { width: 130px; height: 130px; }
+.end-logo b { font: 900 150px/1 var(--sans); letter-spacing: 8px; }
+.repo { margin-top: 60px; padding: 34px 40px; text-align: center; }
+.repo .u { font: 800 58px var(--mono); letter-spacing: -1px; }
+.repo .s { display: flex; justify-content: center; gap: 18px; margin-top: 26px; }
+.note { margin-top: 50px; font: 700 36px var(--sans); color: var(--ink-2); display: flex; align-items: center; gap: 14px; }
+.note i { font-style: normal; width: 52px; height: 52px; border-radius: 50%; border: 4px solid var(--ink-2); display: inline-flex; align-items: center; justify-content: center; font: 900 30px var(--sans); }
+.bye { font: 400 120px var(--fun); margin-top: 50px; letter-spacing: 8px; }
+</style>
+</head>
+<body>
+<div id="dots"></div>
+<div id="hex"></div>
+
+<div id="top">
+  <div class="brand"><i></i>Leo 讲开源</div>
+  <div class="ep">EP.01 · REA</div>
+</div>
+<div id="progress"><b></b></div>
+
+<div id="stage">
+  <!-- hook -->
+  <section class="scene" id="s-hook">
+    <div class="phone e" id="h-phone">
+      <div class="notch"></div>
+      <div class="search">⌕ 搜索笔记…</div>
+      <div class="feature e" id="h-feat">✦<div>超好用的功能<small>别人家的应用里有</small></div></div>
+      <div class="row" style="width:88%"></div>
+      <div class="row" style="width:70%"></div>
+      <div class="row" style="width:94%"></div>
+      <div class="row" style="width:60%"></div>
+      <div class="row" style="width:82%"></div>
+      <div class="row" style="width:50%"></div>
+    </div>
+    <div class="spark e" id="h-s1" style="left:170px;top:210px">✦</div>
+    <div class="spark e" id="h-s2" style="left:760px;top:330px;font-size:54px">✦</div>
+    <div class="stamp e" id="h-stamp">没源码？<small>// source not found</small></div>
+  </section>
+
+  <!-- intro -->
+  <section class="scene center" id="s-intro">
+    <div class="logo e" id="i-logo">
+      <svg viewBox="0 0 32 32"><path fill="#fff" d="M9 7h7.5c5 0 7.5 2.3 7.5 6.2 0 2.8-1.4 4.7-4 5.6L25 25h-5l-4.5-5.8H13V25H9zm4 3.5v5.2h3.5c2.3 0 3.5-.8 3.5-2.6s-1.2-2.6-3.5-2.6z"/></svg>
+    </div>
+    <div class="big e" id="i-name">REA</div>
+    <div class="tagline e" id="i-tag">Reverse Engineer Anything</div>
+    <div class="zh e" id="i-zh"><span class="mark">逆向一切</span></div>
+  </section>
+
+  <!-- what -->
+  <section class="scene" id="s-what">
+    <div class="tier card e" id="w-t1">
+      <h3><span class="n">01</span>你的 AI 智能体</h3>
+      <div class="chips">
+        <span class="chip e w-c1">Claude Code</span><span class="chip e w-c1">Codex</span>
+        <span class="chip e w-c1">Cursor</span><span class="chip e w-c1">Gemini CLI</span>
+      </div>
+    </div>
+    <div class="pipe e" id="w-p1"><i></i></div>
+    <div class="tier card core e" id="w-t2">
+      <h3><span class="n">02</span>REA · MCP 服务</h3>
+      <p>把智能体接上专业逆向工具 · 也能在终端直接用</p>
+    </div>
+    <div class="pipe e" id="w-p2"><i></i></div>
+    <div class="tier card e" id="w-t3">
+      <h3><span class="n">03</span>逆向分析引擎</h3>
+      <div class="chips">
+        <span class="chip e w-c2">Hopper</span><span class="chip e w-c2">Ghidra</span>
+        <span class="chip e w-c2">IDA</span><span class="chip e w-c2">JADX</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- how -->
+  <section class="scene" id="s-how">
+    <div class="ask card e" id="o-ask">
+      <div class="who">YOU → AGENT</div>
+      <div class="q"><span id="o-q" data-type="弄清 Notes 应用的搜索功能如何工作，展示证据，并为我的项目实现类似功能。"></span><i class="caret" id="o-caret"></i></div>
+    </div>
+    <div class="steps">
+      <div class="step e" id="o-1"><div class="no">1</div><div><b>检查目标</b><span>应用、二进制、网页…</span></div><div class="who2">REA</div></div>
+      <div class="step e" id="o-2"><div class="no">2</div><div><b>追踪代码</b><span>调用、引用、IPC</span></div><div class="who2">REA</div></div>
+      <div class="step e" id="o-3"><div class="no">3</div><div><b>返回发现 + 证据</b><span>代码、地址、未知项</span></div><div class="who2">REA</div></div>
+      <div class="step agent e" id="o-4"><div class="no">4</div><div><b>解释 · 实现 · 测试</b><span>在你的项目里落地</span></div><div class="who2">AGENT</div></div>
+    </div>
+  </section>
+
+  <!-- scope -->
+  <section class="scene" id="s-scope">
+    <div class="title e" id="c-title">能分析<span class="mark">什么</span>？</div>
+    <div class="grid">
+      <div class="tile e sc"><div class="ic">01</div><div><b>原生二进制</b><span>伪代码 · 汇编 · 符号</span></div></div>
+      <div class="tile e sc"><div class="ic">JS</div><div><b>JavaScript</b><span>模块 · source map</span></div></div>
+      <div class="tile e sc"><div class="ic">⚛</div><div><b>Electron</b><span>IPC · preload</span></div></div>
+      <div class="tile e sc"><div class="ic">.N</div><div><b>.NET 程序集</b><span>元数据 · CIL</span></div></div>
+      <div class="tile e sc"><div class="ic">A</div><div><b>安卓 APK</b><span>清单 · 反编译</span></div></div>
+      <div class="tile e sc"><div class="ic">www</div><div><b>网站</b><span>脚本 · 网络 · 截图</span></div></div>
+      <div class="tile e sc"><div class="ic">HAR</div><div><b>网络抓包</b><span>请求 · 响应 · 载荷</span></div></div>
+      <div class="tile e sc"><div class="ic">FW</div><div><b>固件</b><span>Binwalk · Unblob</span></div></div>
+    </div>
+    <div class="more e" id="c-more">还有 EVM 字节码、崩溃转储、进程行为……</div>
+  </section>
+
+  <!-- case -->
+  <section class="scene" id="s-case">
+    <div class="case-head card e" id="k-head">
+      <img src="/assets/rea/showcase-dx-ball.png" alt="">
+      <div><div class="lbl">SHOWCASE</div><h2>DX-Ball</h2><p>经典打砖块游戏 · 只有二进制</p></div>
+    </div>
+    <div class="trace">
+      <div class="node e" id="k-n1">声音调用<span>sound call</span></div>
+      <div class="arr e" id="k-a1">→</div>
+      <div class="node hot e" id="k-n2">声像函数<span>pan helper</span></div>
+      <div class="arr e" id="k-a2">→</div>
+      <div class="node e" id="k-n3">C 代码<span>rebuilt</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat e" id="k-s1"><div class="v"><span data-count="3205" data-sep="1">0</span></div><div class="k">原始 x86 测试用例</div><div class="ok e" id="k-ok1">全部通过</div></div>
+      <div class="stat e" id="k-s2"><div class="v"><span data-count="63">0</span><small> B</small></div><div class="k">编译后函数字节</div><div class="ok e" id="k-ok2">逐字节一致</div></div>
+    </div>
+  </section>
+
+  <!-- trust -->
+  <section class="scene" id="s-trust">
+    <div class="laptop e" id="t-lap">
+      <div class="screen"><img src="/assets/rea/rea-hopper-analysis.png" alt=""></div>
+      <div class="base"></div>
+    </div>
+    <div class="badges">
+      <div class="badge e" id="t-b1"><div class="ic">⌂</div><b>本机运行</b><span>目标不出你的电脑</span></div>
+      <div class="badge e" id="t-b2"><div class="ic">✓</div><b>附带证据</b><span>每个结论都有出处</span></div>
+      <div class="badge e" id="t-b3"><div class="ic">!</div><b>说明局限</b><span>不确定的地方直说</span></div>
+    </div>
+  </section>
+
+  <!-- start -->
+  <section class="scene" id="s-start">
+    <div class="title e" id="g-title">一行命令<span class="mark">上手</span></div>
+    <div class="term e" id="g-term">
+      <div class="bar"><i></i><i></i><i></i><b>~/my-project</b></div>
+      <pre><span class="p">$ </span><span class="c" id="g-cmd" data-type="npx rea-agents setup"></span><i class="caret" id="g-caret" style="background:#e8e6e1"></i>
+<span class="e g-out"><span class="hl">?</span> 选择智能体 <span class="dim">›</span> <span class="hl">Claude Code</span></span>
+<span class="e g-out"><span class="hl">?</span> 检查计划中的变更 <span class="dim">›</span> 批准</span>
+<span class="e g-out"><span class="ok">✔</span> 已备份现有配置</span>
+<span class="e g-out"><span class="ok">✔</span> 已注册 REA MCP 服务</span>
+<span class="e g-out"><span class="ok">✔</span> 已安装工作流指引</span>
+<span class="e g-out"><span class="dim">→</span> 重启智能体，开始提问</span></pre>
+    </div>
+    <div class="cmd e" id="g-chip"><span class="chip dark">需要 Node.js 22+ 与 npm</span></div>
+  </section>
+
+  <!-- outro -->
+  <section class="scene center" id="s-outro">
+    <div class="end-logo e" id="x-logo">
+      <div class="logo"><svg viewBox="0 0 32 32"><path fill="#fff" d="M9 7h7.5c5 0 7.5 2.3 7.5 6.2 0 2.8-1.4 4.7-4 5.6L25 25h-5l-4.5-5.8H13V25H9zm4 3.5v5.2h3.5c2.3 0 3.5-.8 3.5-2.6s-1.2-2.6-3.5-2.6z"/></svg></div>
+      <b>REA</b>
+    </div>
+    <div class="repo card e" id="x-repo">
+      <div class="u">github.com/morluto/rea</div>
+      <div class="s"><span class="chip">★ 开源免费</span><span class="chip dark">MIT 协议</span></div>
+    </div>
+    <div class="note e" id="x-note"><i>!</i>只分析你有权分析的软件</div>
+    <div class="bye e" id="x-bye">下次见～</div>
+  </section>
+</div>
+
+<div id="fx"><span id="fx-q1" style="left:300px;top:20px">?</span><span id="fx-q2" style="left:360px;top:-30px;font-size:70px">?</span><span id="fx-st" style="left:320px;top:0">✦</span></div>
+<div id="leo">
+  <div class="shadow"></div>
+  <div class="body">
+    <img id="leo-n" class="on" src="/assets/leo.png" alt="">
+    <img id="leo-b" src="/assets/leo_blink.png" alt="">
+    <img id="leo-h" src="/assets/leo_happy.png" alt="">
+  </div>
+</div>
+<div id="bubble"><div id="subwho">LEO</div><div id="sub"></div></div>
+
+<script>
+const EASE = "cubic-bezier(.2,.9,.25,1)";
+const BACK = "cubic-bezier(.34,1.56,.64,1)";
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+window.CUES = [];
+const cue = (t, sfx, gain = 1) => window.CUES.push({ t: +t.toFixed(3), sfx, gain });
+
+const KF = {
+  up: [{ opacity: 0, transform: "translateY(60px)" }, { opacity: 1, transform: "none" }],
+  down: [{ opacity: 0, transform: "translateY(-60px)" }, { opacity: 1, transform: "none" }],
+  left: [{ opacity: 0, transform: "translateX(-80px)" }, { opacity: 1, transform: "none" }],
+  pop: [{ opacity: 0, transform: "scale(.4)" }, { opacity: 1, transform: "scale(1)" }],
+  stamp: [{ opacity: 0, transform: "scale(2.2) rotate(-14deg)" }, { opacity: 1, transform: "scale(1) rotate(-6deg)" }],
+  fade: [{ opacity: 0 }, { opacity: 1 }],
+  out: [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-50px)" }],
+  outFade: [{ opacity: 1 }, { opacity: 0 }],
+};
+
+// Every animation is created paused with fill "forwards"; seek() drives them.
+// Base CSS holds the pre-entrance state, and later animations win, so
+// entrance → exit chains compose correctly in both directions.
+function A(el, kf, at, dur = 0.55, easing = EASE) {
+  const els = typeof el === "string" ? $$(el) : [el];
+  els.forEach((e) => e.animate(typeof kf === "string" ? KF[kf] : kf, {
+    delay: Math.max(0, at) * 1000, duration: dur * 1000, fill: "forwards", easing,
+  }));
+}
+function stagger(sel, kf, at, gap, dur = 0.5, easing = BACK, sfx = "pop") {
+  $$(sel).forEach((e, i) => { A(e, kf, at + i * gap, dur, easing); if (sfx) cue(at + i * gap, sfx, 0.7); });
+}
+
+let TL;
+const scene = (id) => TL.scenes.find((s) => s.id === id);
+const line = (id, i) => scene(id).lines[i];
+// Time at which `key` is spoken in a line, interpolated from the subtitle
+// chunk that contains it (chunks are timed by spoken characters).
+function at(id, i, key) {
+  const l = line(id, i);
+  let pos = l.text.indexOf(key);
+  if (pos < 0) throw new Error(`"${key}" not in ${id}/${i}`);
+  for (const c of l.subs) {
+    const off = l.text.indexOf(c.text);
+    if (off <= pos && pos < off + c.text.length) return c.start + (c.end - c.start) * (pos - off) / c.text.length;
+  }
+  return l.start + l.dur * pos / l.text.length;
+}
+
+function build() {
+  // Scene containers: fade in at start, drift out at end.
+  TL.scenes.forEach((s, i) => {
+    const el = $("#s-" + s.id);
+    A(el, "fade", s.start - 0.15, 0.35);
+    if (i < TL.scenes.length - 1) A(el, "out", s.end - 0.1, 0.4, "ease-in");
+    if (i) cue(s.start - 0.2, "whoosh", 0.55);
+  });
+  // Bubble appears with Leo's first line.
+  A("#bubble", [{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "none" }], TL.scenes[0].lines[0].start - 0.25, 0.4, BACK);
+
+  // hook
+  const h = scene("hook");
+  A("#h-phone", "up", h.start, 0.7);
+  A("#h-feat", "pop", at("hook", 0, "有个超好用") - 0.1, 0.5, BACK); cue(at("hook", 0, "有个超好用"), "ding", 0.5);
+  A("#h-s1", "pop", at("hook", 0, "有个超好用") + 0.1, 0.5, BACK);
+  A("#h-s2", "pop", at("hook", 0, "有个超好用") + 0.25, 0.5, BACK);
+  A("#h-phone", [{ filter: "none" }, { filter: "grayscale(1) blur(2px)", opacity: 1 }], line("hook", 1).start, 0.5);
+  A("#h-stamp", "stamp", line("hook", 1).start + 0.35, 0.35, "cubic-bezier(.5,0,.75,0)"); cue(line("hook", 1).start + 0.65, "pop", 1.2);
+
+  // intro
+  const n = scene("intro");
+  A("#i-logo", "pop", at("intro", 0, "今天"), 0.6, BACK); cue(at("intro", 0, "今天"), "pop");
+  A("#i-name", "up", at("intro", 0, "REA") - 0.2, 0.6);
+  A("#i-tag", "up", at("intro", 0, "REA") + 0.05, 0.6);
+  A("#i-zh", "pop", at("intro", 0, "REA") + 0.6, 0.6, BACK); cue(at("intro", 0, "REA") + 0.6, "ding", 0.6);
+
+  // what
+  A("#w-t1", "up", at("what", 0, "能把你") - 0.1);
+  A("#w-p1", "fade", at("what", 0, "能把你") + 0.3, 0.3);
+  A("#w-t2", "pop", at("what", 0, "它是"), 0.6, BACK); cue(at("what", 0, "它是"), "pop");
+  A("#w-p2", "fade", at("what", 0, "接上") + 0.1, 0.3);
+  A("#w-t3", "up", at("what", 0, "接上") - 0.1);
+  stagger(".w-c1", "pop", line("what", 1).start, 0.3);
+  stagger(".w-c2", "pop", at("what", 1, "底层"), 0.28);
+  $$(".pipe i").forEach((p) => p.animate([{ transform: "translateY(0)" }, { transform: "translateY(40px)" }], { duration: 600, iterations: Infinity }));
+
+  // how
+  A("#o-ask", "up", scene("how").start, 0.6);
+  typeOn("#o-q", line("how", 0).start + 0.3, at("how", 1, "REA") - 0.2);
+  A("#o-1", "left", at("how", 1, "REA"), 0.5); cue(at("how", 1, "REA"), "pop", 0.8);
+  A("#o-2", "left", at("how", 1, "追踪"), 0.5); cue(at("how", 1, "追踪"), "pop", 0.8);
+  A("#o-3", "left", at("how", 1, "把发现"), 0.5); cue(at("how", 1, "把发现"), "pop", 0.8);
+  A("#o-4", "left", line("how", 2).start, 0.5); cue(line("how", 2).start, "ding", 0.5);
+
+  // scope
+  const sc = line("scope", 0);
+  A("#c-title", "down", scene("scope").start, 0.5);
+  stagger(".sc", "pop", sc.start + 1.3, (sc.dur - 2.1) / 8);
+  A("#c-more", "up", sc.start + sc.dur - 0.4, 0.5);
+
+  // case
+  A("#k-head", "up", scene("case").start, 0.6);
+  A("#k-n1", "pop", at("case", 1, "REA"), 0.5, BACK); cue(at("case", 1, "REA"), "pop", 0.8);
+  A("#k-a1", "left", at("case", 1, "找到") - 0.2, 0.4);
+  A("#k-n2", "pop", at("case", 1, "找到"), 0.5, BACK); cue(at("case", 1, "找到"), "pop", 0.8);
+  A("#k-a2", "left", at("case", 1, "重建") - 0.2, 0.4);
+  A("#k-n3", "pop", at("case", 1, "重建"), 0.5, BACK); cue(at("case", 1, "重建"), "pop", 0.8);
+  const c2 = line("case", 2);
+  A("#k-s1", "up", c2.start, 0.5);
+  count($("#k-s1 [data-count]"), c2.start + 0.2, at("case", 2, "连编译") - 0.4);
+  A("#k-ok1", "pop", at("case", 2, "连编译") - 0.3, 0.4, BACK); cue(at("case", 2, "连编译") - 0.3, "ding", 0.6);
+  A("#k-s2", "up", at("case", 2, "连编译"), 0.5);
+  count($("#k-s2 [data-count]"), at("case", 2, "连编译") + 0.2, c2.start + c2.dur - 0.6);
+  A("#k-ok2", "pop", c2.start + c2.dur - 0.5, 0.4, BACK); cue(c2.start + c2.dur - 0.5, "ding", 0.6);
+
+  // trust
+  A("#t-lap", "up", scene("trust").start, 0.6);
+  A("#t-b1", "left", at("trust", 0, "而且") + 0.4, 0.5); cue(at("trust", 0, "而且") + 0.4, "pop", 0.8);
+  A("#t-b2", "left", at("trust", 0, "每个"), 0.5); cue(at("trust", 0, "每个"), "pop", 0.8);
+  A("#t-b3", "left", at("trust", 0, "也会"), 0.5); cue(at("trust", 0, "也会"), "pop", 0.8);
+
+  // start
+  A("#g-title", "down", scene("start").start, 0.5);
+  A("#g-term", "up", scene("start").start + 0.1, 0.6);
+  typeOn("#g-cmd", at("start", 0, "npx") - 0.1, at("start", 0, "npx") + 1.5, true);
+  stagger(".g-out", "fade", line("start", 1).start - 0.1, 0.55, 0.25, "linear", "tick");
+  A("#g-caret", "outFade", line("start", 1).start - 0.2, 0.1);
+  A("#g-chip", "up", line("start", 1).start + 3.0, 0.5);
+
+  // outro
+  A("#x-logo", "pop", scene("outro").start, 0.6, BACK); cue(scene("outro").start, "pop");
+  A("#x-repo", "up", at("outro", 0, "项目地址") - 0.2, 0.6); cue(at("outro", 0, "项目地址") - 0.2, "ding", 0.6);
+  A("#x-note", "up", line("outro", 1).start, 0.5);
+  A("#x-bye", "pop", at("outro", 1, "我是"), 0.6, BACK); cue(at("outro", 1, "我是"), "boing", 0.8);
+
+  const last = TL.scenes.at(-1).lines.at(-1);
+  A("#bubble", [{ opacity: 1 }, { opacity: 0, transform: "scale(.9)" }], last.start + last.dur + 0.5, 0.4);
+
+  // Leo's beats.
+  LEO.jumps = [at("intro", 0, "我是"), at("case", 2, "连编译") - 0.3, at("outro", 1, "我是")];
+  LEO.jumps.forEach((t) => cue(t, "boing", 0.7));
+  LEO.tilt = [line("hook", 1).start, line("hook", 1).start + line("hook", 1).dur + 0.6];
+  LEO.happy = [[at("intro", 0, "我是"), at("intro", 0, "今天")], [at("case", 2, "连编译") - 0.3, c2.start + c2.dur + 0.4], [at("outro", 1, "我是"), 1e9]];
+  LEO.wave = at("outro", 1, "我是") + 0.4;
+
+  // Decorative hex drifting in the background.
+  const words = ["mov w0, #0x0", "0x100000368", "ret", "__TEXT", "call _pan", "db 0x40", "EntryPoint:", "LC_CODE_SIGNATURE", "0x4090", "ipcMain.on", "ldr x8, [x0]", "push rbp", "0xCAFEBABE", "jmp 0x401a3c", "dataflow", "xref →"];
+  let seed = 3;
+  const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  for (let i = 0; i < 34; i++) {
+    const s = document.createElement("span");
+    s.textContent = words[i % words.length];
+    s.dataset.x = rnd() * 1000 - 80; s.dataset.y = rnd() * 2100; s.dataset.v = 8 + rnd() * 16;
+    $("#hex").appendChild(s);
+  }
+
+  document.getAnimations().forEach((a) => a.pause());
+}
+
+// Typewriter / counters / Leo are procedural: computed from t in seek().
+const TYPERS = [];
+function typeOn(sel, t0, t1, ticks = false) {
+  const el = $(sel);
+  TYPERS.push({ el, text: el.dataset.type, t0, t1 });
+  if (ticks) for (let i = 0; i < el.dataset.type.length; i += 2) cue(t0 + (t1 - t0) * i / el.dataset.type.length, "tick", 0.6);
+}
+const COUNTERS = [];
+function count(el, t0, t1) { COUNTERS.push({ el, t0, t1, n: +el.dataset.count, sep: !!el.dataset.sep }); }
+
+const LEO = { jumps: [], tilt: [0, 0], happy: [], wave: 1e9 };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+
+function talkingAt(t) {
+  for (const s of TL.scenes) for (const l of s.lines) if (t >= l.start && t <= l.start + l.dur) return l;
+  return null;
+}
+
+function updateLeo(t) {
+  // Entrance: rise from below with a little overshoot.
+  const e = clamp(t / 0.7);
+  let y = (1 - easeOut(e)) * 700 - Math.sin(e * Math.PI) * 30;
+  let rot = 0, sx = 1, sy = 1;
+  // Breathing.
+  sy *= 1 + 0.012 * Math.sin(t * 2.4);
+  sx *= 1 - 0.006 * Math.sin(t * 2.4);
+  // Talking: gentle sway (his mouth is behind the collar, so the body talks).
+  const l = talkingAt(t);
+  if (l) {
+    const k = clamp((t - l.start) / 0.25) * clamp((l.start + l.dur - t) / 0.25);
+    rot += Math.sin((t - l.start) * 5.2) * 1.6 * k;
+    y -= Math.abs(Math.sin((t - l.start) * 7.5)) * 7 * k;
+  }
+  // Head-tilt "huh?" during the hook question.
+  const [ta, tb] = LEO.tilt;
+  const tk = clamp((t - ta) / 0.3) * clamp((tb - t) / 0.3);
+  rot -= 7 * tk;
+  // Jumps with squash & stretch.
+  for (const j of LEO.jumps) {
+    const p = (t - j) / 0.6;
+    if (p >= 0 && p <= 1) {
+      y -= Math.sin(p * Math.PI) * 120;
+      const sq = p < 0.12 ? -Math.sin(p / 0.12 * Math.PI) * 0.08 : p > 0.88 ? -Math.sin((p - 0.88) / 0.12 * Math.PI) * 0.08 : 0.05 * Math.sin(p * Math.PI);
+      sy *= 1 + sq; sx *= 1 - sq * 0.8;
+    }
+  }
+  // Wave goodbye.
+  if (t > LEO.wave) rot += Math.sin((t - LEO.wave) * 6) * 6 * clamp((t - LEO.wave) / 0.4);
+  $("#leo .body").style.transform = `translateY(${y}px) rotate(${rot}deg) scale(${sx}, ${sy})`;
+  $("#leo .shadow").style.transform = `scaleX(${1 - clamp(-y / 400, 0, 0.4)})`;
+  $("#leo .shadow").style.opacity = e;
+
+  // Expression: happy windows > blink schedule > normal.
+  let face = "n";
+  if (LEO.happy.some(([a, b]) => t >= a && t <= b)) face = "h";
+  else {
+    const period = 3.1, phase = (t + 0.7 * Math.sin(Math.floor(t / period) * 1.7)) % period;
+    if (t > 1 && phase < 0.13) face = "b";
+  }
+  ["n", "b", "h"].forEach((f) => $("#leo-" + f).classList.toggle("on", f === face));
+
+  // "?" marks and sparkle.
+  const q = clamp((t - ta - 0.2) / 0.3) * clamp((tb - t) / 0.3);
+  $("#fx-q1").style.opacity = q; $("#fx-q1").style.transform = `translateY(${(1 - q) * 30}px) rotate(12deg)`;
+  const q2 = clamp((t - ta - 0.4) / 0.3) * clamp((tb - t) / 0.3);
+  $("#fx-q2").style.opacity = q2; $("#fx-q2").style.transform = `translateY(${(1 - q2) * 30}px) rotate(-10deg)`;
+  const st = LEO.jumps.map((j) => clamp((t - j) / 0.25) * clamp((j + 1.4 - t) / 0.3)).reduce((a, b) => Math.max(a, b), 0);
+  $("#fx-st").style.opacity = st; $("#fx-st").style.transform = `scale(${0.5 + st * 0.5}) rotate(${t * 90}deg)`;
+}
+
+let lastSub = "";
+function updateSub(t) {
+  let text = "", alpha = 0;
+  for (const s of TL.scenes) for (const l of s.lines) for (const c of l.subs) {
+    if (t >= c.start - 0.05) { text = c.text; alpha = clamp((l.start + l.dur + 0.6 - t) / 0.2); }
+  }
+  if (text !== lastSub) { $("#sub").textContent = text; lastSub = text; }
+  $("#sub").style.opacity = alpha;
+}
+
+function seek(t) {
+  for (const a of document.getAnimations()) a.currentTime = t * 1000;
+  for (const ty of TYPERS) {
+    const k = clamp((t - ty.t0) / (ty.t1 - ty.t0));
+    ty.el.textContent = ty.text.slice(0, Math.round(k * ty.text.length));
+  }
+  for (const c of COUNTERS) {
+    const v = Math.round(easeOut(clamp((t - c.t0) / (c.t1 - c.t0))) * c.n);
+    c.el.textContent = c.sep ? v.toLocaleString("en-US") : v;
+  }
+  const blink = Math.floor(t * 1.8) % 2 === 0 ? 1 : 0;
+  $("#o-caret").style.opacity = blink; $("#g-caret").style.opacity = blink;
+  $("#progress b").style.width = (100 * clamp(t / TL.duration)) + "%";
+  $$("#hex span").forEach((s) => {
+    const y = ((+s.dataset.y - t * +s.dataset.v) % 2100 + 2100) % 2100 - 100;
+    s.style.transform = `translate(${s.dataset.x}px, ${y}px)`;
+  });
+  $("#dots").style.transform = `translate(${-(t * 6) % 40}px, ${-(t * 4) % 40}px)`;
+  updateLeo(t);
+  updateSub(t);
+}
+
+window.ready = (async () => {
+  TL = await (await fetch("/build/timeline.json")).json();
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
+  build();
+  window.seek = seek;
+  window.DURATION = TL.duration;
+  seek(+(new URLSearchParams(location.search).get("t") || 0));
+  // Fonts referenced only by later scenes load lazily; touch them now.
+  await document.fonts.ready;
+  return true;
+})();
+</script>
+</body>
+</html>

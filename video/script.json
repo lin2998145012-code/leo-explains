@@ -1,0 +1,68 @@
+{
+  "title": "Leo 讲开源 · REA：逆向一切",
+  "voice": { "sid": 58, "speed": 1.08 },
+  "scenes": [
+    {
+      "id": "hook",
+      "lines": [
+        { "text": "看到别人的应用里，有个超好用的功能？" },
+        { "text": "想学，却没有源码，怎么办？" }
+      ]
+    },
+    {
+      "id": "intro",
+      "lines": [
+        { "text": "我是 Leo。今天带你看一个开源项目：REA，逆向一切。", "tts": "我是 Leo。今天带你看一个开源项目，R E A，逆向一切。" }
+      ]
+    },
+    {
+      "id": "what",
+      "lines": [
+        { "text": "它是一个 MCP 服务，能把你的 AI 智能体，接上专业的逆向分析工具。", "tts": "它是一个 M C P 服务，能把你的 AI 智能体，接上专业的逆向分析工具。" },
+        { "text": "Claude Code、Codex、Cursor 都能用，底层接 Hopper、Ghidra 或 IDA。", "tts": "Claude Code，Codex，Cursor 都能用，底层接 Hopper，吉德拉，或者 I D A。" }
+      ]
+    },
+    {
+      "id": "how",
+      "lines": [
+        { "text": "你只管提问，比如：弄清某个应用的搜索功能是怎么实现的。" },
+        { "text": "REA 负责检查目标、追踪代码，把发现和证据交回给智能体。", "tts": "R E A 负责检查目标，追踪代码，把发现和证据交回给智能体。" },
+        { "text": "智能体再据此解释原理、写出实现、跑测试。" }
+      ]
+    },
+    {
+      "id": "scope",
+      "lines": [
+        { "text": "能分析的东西很多：原生二进制、JavaScript 和 Electron 应用、.NET、安卓 APK、网站、网络抓包，甚至固件。", "tts": "能分析的东西很多：原生二进制，JavaScript 和 Electron 应用，dot net，安卓 A P K，网站，网络抓包，甚至固件。" }
+      ]
+    },
+    {
+      "id": "case",
+      "lines": [
+        { "text": "举个真实案例：老游戏 DX-Ball。", "tts": "举个真实案例：老游戏 D X Ball。" },
+        { "text": "REA 顺着声音调用，找到计算声像的函数，重建成 C 代码。", "tts": "R E A 顺着声音调用，找到计算声像的函数，重建成 C 代码。" },
+        { "text": "结果通过了全部 3,205 个原始测试，连编译后的 63 个字节都一模一样。", "tts": "结果通过了全部三千二百零五个原始测试，连编译后的六十三个字节都一模一样。" }
+      ]
+    },
+    {
+      "id": "trust",
+      "lines": [
+        { "text": "而且分析全在你自己的电脑上运行，每个结论都附带证据，也会说明局限。" }
+      ]
+    },
+    {
+      "id": "start",
+      "lines": [
+        { "text": "上手只要一行命令：npx rea-agents setup。", "tts": "上手只要一行命令：N P X，R E A agent setup。" },
+        { "text": "选好智能体，确认变更，重启一下就能开始。" }
+      ]
+    },
+    {
+      "id": "outro",
+      "lines": [
+        { "text": "REA 开源免费，MIT 协议，项目地址就在屏幕上。", "tts": "R E A 开源免费，M I T 协议，项目地址就在屏幕上。" },
+        { "text": "记得只分析你有权分析的软件。我是 Leo，我们下次见！" }
+      ]
+    }
+  ]
+}
