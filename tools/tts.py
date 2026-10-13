@@ -52,13 +52,31 @@ def load_kokoro(d: Path):
     return sherpa_onnx.OfflineTts(cfg)
 
 
+def merged_lexicon(model_lexicon: Path):
+    """Put video/lexicon.txt (pronunciation fixes) ahead of the model's lexicon.
+
+    The first entry for a word wins, so overrides replace polyphone readings
+    such as 一行 (yì háng, not yī xíng)."""
+    extra = ROOT / "video" / "lexicon.txt"
+    if not extra.exists():
+        return model_lexicon
+    fixes = [l for l in extra.read_text().splitlines() if l.strip() and not l.startswith("#")]
+    words = {l.split()[0] for l in fixes}
+    rest = [l for l in model_lexicon.read_text().splitlines() if l.split(" ", 1)[0] not in words]
+    out = BUILD / "zipvoice-lexicon.txt"
+    BUILD.mkdir(exist_ok=True)
+    out.write_text("\n".join(fixes + rest) + "\n")
+    return out
+
+
 def load_zipvoice(d: Path, vocoder: Path):
+    lexicon = merged_lexicon(d / "lexicon.txt")
     d = str(d) + "/"
     cfg = sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
             zipvoice=sherpa_onnx.OfflineTtsZipvoiceModelConfig(
                 tokens=d + "tokens.txt", encoder=d + "encoder.int8.onnx", decoder=d + "decoder.int8.onnx",
-                vocoder=str(vocoder), data_dir=d + "espeak-ng-data", lexicon=d + "lexicon.txt"),
+                vocoder=str(vocoder), data_dir=d + "espeak-ng-data", lexicon=str(lexicon)),
             num_threads=8))
     return sherpa_onnx.OfflineTts(cfg)
 
@@ -121,6 +139,8 @@ def main():
     ap.add_argument("--ref-text", type=Path, help="exact transcript of --ref")
     ap.add_argument("--asr", type=Path, help="SenseVoice dir: check each line and retake if needed")
     ap.add_argument("--speed", type=float)
+    ap.add_argument("--only", nargs="+", default=[],
+                    help="regenerate only these lines (e.g. 13 or start_0); reuse build/vo for the rest")
     args = ap.parse_args()
 
     script = json.loads((ROOT / "video" / "script.json").read_text())
@@ -155,8 +175,13 @@ def main():
         for li, line in enumerate(scene["lines"]):
             if li:
                 t += LINE_GAP
+            name = f"{n:02d}_{scene['id']}_{li}.wav"
+            keep = args.only and f"{n:02d}" not in args.only and f"{scene['id']}_{li}" not in args.only
             best = None
-            for k in range(4 if asr else 1):
+            if keep:
+                x, sr = sf.read(BUILD / "vo" / name, dtype="float32")
+                best = (0.0, x, "")
+            for k in range(0 if keep else 4 if asr else 1):
                 audio = speak(line.get("tts", line["text"]), k)
                 sr = audio.sample_rate
                 x = trim(np.asarray(audio.samples, dtype=np.float32), sr)
@@ -167,9 +192,8 @@ def main():
                 if err <= 0.03:
                     break
             err, x, heard = best
-            if asr:
+            if asr and not keep:
                 report.append(f"{err:4.0%}  {line['text']}\n      heard: {heard}")
-            name = f"{n:02d}_{scene['id']}_{li}.wav"
             sf.write(BUILD / "vo" / name, x, sr)
             dur = len(x) / sr
             # Time subtitle chunks by their share of the spoken characters.

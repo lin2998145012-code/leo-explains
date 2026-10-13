@@ -1,0 +1,6 @@
+# Pronunciation fixes for the cloned voice (ZipVoice), merged ahead of the
+# model's own lexicon so these entries win. Format: word, then phones
+# (initial + final with tone, as in the model's lexicon.txt).
+# The model reads 一行 as yī xíng; "a line of command" is yì háng.
+一行命令 y0 i4 h0 ang2 m0 ing4 l0 ing4
+一行 y0 i4 h0 ang2
